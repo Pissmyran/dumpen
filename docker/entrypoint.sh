@@ -51,6 +51,8 @@ chmod 600 "$vars"
 } >>"$vars"
 
 cd "$site"
+# Wrangler's local explorer bypasses the Worker's authentication and can edit R2.
+export X_LOCAL_EXPLORER=false
 exec npx wrangler dev --local --persist-to /data \
   --ip 0.0.0.0 --port "${PORT:-8787}" \
   --env-file "$vars" --show-interactive-dev-session=false
