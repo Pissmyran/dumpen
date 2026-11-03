@@ -100,6 +100,15 @@ The container speaks plain HTTP on port 8787. With `cloudflare-access` the tunne
 
 ## Changelog
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:93ac3719b5aa6b02e5471d92450a20dd0ca990b889c49e030a3104473c7f3364 -->
+
+**2.0.1**
+- Docker credentials are passed literally to the Worker. Changing the password now invalidates sessions even when it contains characters such as `#` or `$`.
+
+<!-- /coderabbit-ai-generated:v1 -->
+
 **2.0.0**
 - The token for "Use in App Launcher" is now called `WORKERS_API_TOKEN`, the same name as on Cloudflare. Rename `CLOUDFLARE_API_TOKEN` in your compose file or `import.env`; the old name is no longer read. Also change the tag to `:2` in the compose file, since `:1` stays on version 1.
 
