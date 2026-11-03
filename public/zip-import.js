@@ -222,7 +222,7 @@ function bad(message) {
   throw new Error(message);
 }
 /** Reads a ZIP (stored/deflate) and returns new images plus skipped entries.
- * `inflateRaw` must accept Uint8Array and return Uint8Array (pako.inflateRaw).
+ * `inflateRaw` must cap its output at the supplied expanded size.
  */
 export async function readImageZip(file, inflateRaw) {
   if (!file || file.size > ZIP_LIMIT || file.size < 22)
@@ -257,6 +257,7 @@ export async function readImageZip(file, inflateRaw) {
     bad("ZIP-filen är för stor eller har ett format som inte stöds.");
   let pos = offset,
     total = 0,
+    totalCompressed = 0,
     images = [],
     skipped = [],
     seen = new Set();
@@ -310,14 +311,17 @@ export async function readImageZip(file, inflateRaw) {
       skipped.push({ path, reason: "Bilden måste vara högst 12 MB" });
       continue;
     }
-    if (total + expanded > MAX_EXPANDED_BYTES)
-      bad("ZIP-filen innehåller mer än 140 MB bilder. Dela upp den.");
+    if (total + expanded > MAX_EXPANDED_BYTES || totalCompressed + compressed > MAX_EXPANDED_BYTES)
+      bad("ZIP-filen kräver mer än 140 MB bilddata. Dela upp den.");
     if (local + 30 > b.length || u32(local) !== SIG_LOCAL) bad("Skadad ZIP-fil (fildata).");
     if (u16(local + 8) !== method || u16(local + 6) & 1)
       bad("ZIP-filen har motstridiga filuppgifter.");
     const dataOffset = local + 30 + u16(local + 26) + u16(local + 28);
     if (dataOffset + compressed > offset || dataOffset + compressed > b.length)
       bad("Skadad ZIP-fil (komprimerad data).");
+    // Charge attempted entries, even when decompression or validation fails.
+    total += expanded;
+    totalCompressed += compressed;
     const raw = b.subarray(dataOffset, dataOffset + compressed);
     let out;
     try {
@@ -335,7 +339,6 @@ export async function readImageZip(file, inflateRaw) {
       skipped.push({ path, reason: "Kräver PNG i 512×512 eller 1254×1254" });
       continue;
     }
-    total += expanded;
     const hint = autodetectImagePath(path);
     const name = path.split("/").at(-1);
     images.push({

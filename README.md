@@ -31,7 +31,7 @@ Dumpen is a private image archive for app icons and theme images. It runs as a C
 
 ## ZIP import
 
-The archive is unpacked in the browser with the bundled `pako` decoder. Each PNG is then sent on its own through `POST /api/upload`, so the server checks size, file type, resolution and name exactly as for a normal upload.
+The archive is unpacked in a browser worker with the bundled `pako` decoder. Closing the import dialog cancels analysis. Each PNG is then sent on its own through `POST /api/upload`, so the server checks size, file type, resolution and name exactly as for a normal upload.
 
 App and theme are read from the folder or file names:
 
@@ -42,7 +42,7 @@ App and theme are read from the folder or file names:
 
 The folder names `appar` and `teman` work too. Ambiguous names must be fixed in the review list; no image is guessed into the wrong app. Rows can be deselected, and failed rows can be sent again without duplicating saved images.
 
-**Limits:** at most 80 MB per ZIP, 100 images and 140 MB of unpacked data, at most 12 MB per image, only 512 × 512 or 1254 × 1254. Archives with unsafe paths are stopped. Folders, text files and macOS system files in the archive are skipped.
+**Limits:** at most 80 MB per ZIP, 100 images and 140 MB of unpacked data, at most 12 MB per image, only 512 × 512 or 1254 × 1254. The 140 MB limit counts attempted PNG data, including rejected entries; compressed data processed is also limited to 140 MB. Archives with unsafe paths are stopped. Folders, text files and macOS system files in the archive are skipped.
 
 ## Local development
 
