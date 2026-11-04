@@ -1,10 +1,10 @@
 #!/bin/sh
 # Renders the gallery with the values from the container environment and
-# serves the Worker with R2 stored under /data. Secrets reach wrangler through a
-# private env file; nothing is baked into the image.
+# serves the Worker with R2 stored under /data. Nothing is baked into the image.
 set -eu
 
 # Saved settings from a one-time /data/import.env (see import-settings.sh).
+# shellcheck source=docker/import-settings.sh
 . /opt/app/docker/import-settings.sh
 
 : "${PUBLIC_URL:=http://localhost:8787}"
@@ -37,20 +37,5 @@ site=/srv/site
 node /opt/app/tools/render.mjs "$values" "$site" >/dev/null
 cp "$app/docker/wrangler.jsonc" "$site/wrangler.jsonc"
 
-vars=$(mktemp)
-chmod 600 "$vars"
-{
-  echo "PUBLIC_ASSET_ORIGIN=$PUBLIC_URL/bilder"
-  echo "GALLERY_PREFIX=gallery/"
-  echo "AUTH_MODE=$AUTH_MODE"
-  [ -n "${ADMIN_PASSWORD:-}" ] && echo "ADMIN_PASSWORD=$ADMIN_PASSWORD"
-  [ -n "$CF_ACCESS_TEAM_DOMAIN" ] && echo "CF_ACCESS_TEAM_DOMAIN=$CF_ACCESS_TEAM_DOMAIN"
-  [ -n "$CF_ACCESS_AUD" ] && echo "CF_ACCESS_AUD=$CF_ACCESS_AUD"
-  [ -n "${WORKERS_API_TOKEN:-}" ] && echo "WORKERS_API_TOKEN=$WORKERS_API_TOKEN"
-  [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && echo "CF_ACCESS_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID"
-} >>"$vars"
-
-cd "$site"
-exec npx wrangler dev --local --persist-to /data \
-  --ip 0.0.0.0 --port "${PORT:-8787}" \
-  --env-file "$vars" --show-interactive-dev-session=false
+export PUBLIC_URL AUTH_MODE
+exec /opt/app/docker/run-worker.sh "$site" /data

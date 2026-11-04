@@ -2,6 +2,16 @@
 
 Versions follow [semver](https://semver.org). The Docker image is tagged `X.Y.Z`, `X.Y`, `X` and `latest`.
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:cb8c32f4842c3f2c9c76fff70d94bb9159781e859ef7d2750f97769bee850484 -->
+
+## 2.0.1 – 2026-11-03
+
+- Preserve Docker credentials literally when passing them to the Worker, so password changes invalidate existing sessions.
+
+<!-- /coderabbit-ai-generated:v1 -->
+
 ## 2.0.0 – 2026-10-22
 
 - Breaking: the Docker setting for the App Launcher theme token is now `WORKERS_API_TOKEN`, the same name as on Cloudflare. Rename `CLOUDFLARE_API_TOKEN` in `docker-compose.yml` or `import.env`; the old name is no longer read. Change the image tag to `:2`; `:1` stays on version 1.

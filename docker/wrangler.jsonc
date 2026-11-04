@@ -4,6 +4,12 @@
   "name": "dumpen",
   "main": "src/index.js",
   "compatibility_date": "2026-10-15",
+  "secrets": {
+    "required": [
+      "PUBLIC_ASSET_ORIGIN", "GALLERY_PREFIX", "AUTH_MODE", "ADMIN_PASSWORD",
+      "CF_ACCESS_TEAM_DOMAIN", "CF_ACCESS_AUD", "WORKERS_API_TOKEN", "CF_ACCESS_ACCOUNT_ID"
+    ]
+  },
   "assets": {
     "directory": "public",
     "binding": "ASSETS",
