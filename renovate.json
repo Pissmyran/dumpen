@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["local>pissmyran/.github:renovate-config"]
+  "extends": ["config:recommended", "schedule:weekly", ":maintainLockFilesWeekly"],
+  "osvVulnerabilityAlerts": true,
+  "pinDigests": true,
+  "packageRules": [
+    {
+      "groupName": "all non-major dependencies",
+      "matchUpdateTypes": ["minor", "patch", "digest"]
+    }
+  ]
 }
