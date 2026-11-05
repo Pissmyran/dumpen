@@ -6,7 +6,7 @@ Every image is public through its link, `/bilder/...`. Everything else, meaning 
 
 ## Getting started
 
-The image is on Docker Hub as `docker.io/pissmyran/dumpen`. The compose file below pulls it from there, so you neither clone the repo nor build anything.
+The image is on Docker Hub as `docker.io/driftaegis/dumpen`. The compose file below pulls it from there, so you neither clone the repo nor build anything.
 
 1. **Install Docker.** On Windows and Mac: [Docker Desktop](https://www.docker.com/products/docker-desktop/). On Linux: the `docker.io` package (Debian/Ubuntu) or equivalent. Podman works too.
 2. **Create a folder** with a file in it named `docker-compose.yml`. Paste the content below.
@@ -17,7 +17,7 @@ The image is on Docker Hub as `docker.io/pissmyran/dumpen`. The compose file bel
 ```yaml
 services:
   dumpen:
-    image: docker.io/pissmyran/dumpen:2
+    image: docker.io/driftaegis/dumpen:2
     restart: unless-stopped
     ports:
       - "8787:8787"
