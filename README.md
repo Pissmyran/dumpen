@@ -93,7 +93,7 @@ English guidance, references the shared governance documents, and links `jobb`,
 context requires eligible CodeRabbit access; configuration does not grant access or
 control billing.
 
-**Publishing the Docker image:** `.github/workflows/docker.yml` takes the Docker Hub namespace from the repository variable `DOCKERHUB_USERNAME` and the token from the secret `DOCKERHUB_TOKEN` (the token lives in the `release` environment). If the variable is not set, the run stops at once with a clear error, before anything is built or published. The GitHub release already exists by then: set the variable and re-run the workflow, which pushes all tags again.
+**Publishing the Docker image:** `.github/workflows/docker.yml` takes the Docker Hub namespace from the repository variable `DOCKERHUB_USERNAME`, the image name from the GitHub repository name, and the token from the secret `DOCKERHUB_TOKEN` (the token lives in the `release` environment). If the variable is not set, the run stops at once with a clear error, before anything is built or published. The GitHub release already exists by then: set the variable and re-run the workflow, which pushes the exact version and every moving tag it is entitled to. The moving tags (`minor`, `major`, `latest`) are only moved by the newest stable release they stand for, so re-running an older release or a prerelease moves none of them; if the release tags cannot be listed, the run fails without moving any.
 
 ## License
 
