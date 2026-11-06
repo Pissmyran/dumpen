@@ -81,7 +81,7 @@ If you do not want values such as passwords in the compose file, put them as `NA
 
 - The images live in the volume mounted at `/data`, as local R2 storage under `/data/v3/r2/`. Metadata about app, theme and size follows each image.
 - **Back up:** `docker compose stop`, copy the volume and run `docker compose start`. You can also download each theme as a ZIP in the interface. That ZIP file can be imported again exactly as it is.
-- **Update:** `docker compose pull && docker compose up -d`.
+- **Update:** `docker compose pull && docker compose up -d`. The image in `docker-compose.yml` is pinned with a digest (`@sha256:…`), so `pull` only fetches that exact version. To upgrade, replace the digest with the one shown by `docker pull docker.io/pissmyran/dumpen:2 && docker image inspect --format '{{index .RepoDigests 0}}' docker.io/pissmyran/dumpen:2` (with Podman, use `podman` instead of `docker`), or remove `@sha256:…` to follow the tag.
 - **Versions:** the tags follow semver. `2` gives every update within version 2, `2.0` only fixes and `2.0.0` exactly one version.
 
 ## HTTPS
