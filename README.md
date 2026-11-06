@@ -74,12 +74,12 @@ The code contains no account details. Wherever a value of your own is needed, su
 
 ## Running with Docker
 
-Dumpen is available as a ready-made image on Docker Hub, `docker.io/driftaegis/dumpen`. You do not need to build anything: `docker-compose.yml` names the image like this, and `docker compose up -d` pulls it.
+Dumpen is available as a ready-made image on Docker Hub, `docker.io/pissmyran/dumpen`. You do not need to build anything: `docker-compose.yml` names the image like this, and `docker compose up -d` pulls it.
 
 In `docker-compose.yml`:
 
 ```yaml
-    image: docker.io/driftaegis/dumpen:2
+    image: docker.io/pissmyran/dumpen:2
 ```
 
 The tag `2` gives every update within version 2; `X.Y` gives only fixes and `X.Y.Z` exactly one version. Every setting is described in [docker/README.md](docker/README.md), and the changes are listed in [CHANGELOG.md](CHANGELOG.md). To build the image yourself from source: `docker build -t dumpen .` in the repo root.
