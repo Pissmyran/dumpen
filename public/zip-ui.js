@@ -352,7 +352,9 @@ function init() {
   });
 }
 if (typeof document === "undefined") {
-  globalThis.onmessage = async ({ data }) => {
+  globalThis.onmessage = async ({ data, origin }) => {
+    // A dedicated worker only hears its creator, whose messages carry an empty origin.
+    if (origin) return;
     try {
       globalThis.postMessage({ result: await analyzeZip(data) });
     } catch (e) {
