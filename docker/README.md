@@ -6,7 +6,7 @@ Every image is public through its link, `/bilder/...`. Everything else, meaning 
 
 ## Getting started
 
-The image is on Docker Hub as `docker.io/driftaegis/dumpen`. The compose file below pulls it from there, so you neither clone the repo nor build anything.
+The image is on Docker Hub as `docker.io/pissmyran/dumpen`. The compose file below pulls it from there, so you neither clone the repo nor build anything.
 
 1. **Install Docker.** On Windows and Mac: [Docker Desktop](https://www.docker.com/products/docker-desktop/). On Linux: the `docker.io` package (Debian/Ubuntu) or equivalent. Podman works too.
 2. **Create a folder** with a file in it named `docker-compose.yml`. Paste the content below.
@@ -17,7 +17,7 @@ The image is on Docker Hub as `docker.io/driftaegis/dumpen`. The compose file be
 ```yaml
 services:
   dumpen:
-    image: docker.io/driftaegis/dumpen:2
+    image: docker.io/pissmyran/dumpen:2
     restart: unless-stopped
     ports:
       - "8787:8787"
@@ -81,8 +81,8 @@ If you do not want values such as passwords in the compose file, put them as `NA
 
 - The images live in the volume mounted at `/data`, as local R2 storage under `/data/v3/r2/`. Metadata about app, theme and size follows each image.
 - **Back up:** `docker compose stop`, copy the volume and run `docker compose start`. You can also download each theme as a ZIP in the interface. That ZIP file can be imported again exactly as it is.
-- **Update:** `docker compose pull && docker compose up -d`.
-- **Versions:** the tags follow semver. `1` gives every update within version 1, `1.2` only fixes and `1.2.0` exactly one version.
+- **Update:** `docker compose pull && docker compose up -d`. The image in `docker-compose.yml` is pinned with a digest (`@sha256:…`), so `pull` only fetches that exact version. To upgrade, replace the digest with the one shown by `docker pull docker.io/pissmyran/dumpen:2 && docker image inspect --format '{{index .RepoDigests 0}}' docker.io/pissmyran/dumpen:2` (with Podman, use `podman` instead of `docker`), or remove `@sha256:…` to follow the tag.
+- **Versions:** the tags follow semver. `2` gives every update within version 2, `2.0` only fixes and `2.0.0` exactly one version.
 
 ## HTTPS
 
@@ -94,7 +94,7 @@ The container speaks plain HTTP on port 8787. With `cloudflare-access` the tunne
 - **Password mode:** the session is a cookie (`HttpOnly`, `SameSite=Strict`) with an expiry and an HMAC-SHA256 signature keyed with `ADMIN_PASSWORD`. Password and signature are compared in constant time, and a wrong password adds a delay. No session data is stored on the server.
 - **Access mode:** the RS256 signature is checked against the team's public keys, as are the issuer, AUD and expiry.
 - **Changes:** every changing request requires same-origin. Responses have a strict CSP and the other security headers. Images are only served with `GET` and `HEAD`, and only for allowed paths and file types.
-- **The image** is based on `node:24-trixie-slim` (Node LTS on Debian stable), runs as the `node` user and has a healthcheck. It only contains source code with placeholders; your values are filled in when the container starts.
+- **The image** is based on the official `node` image, `trixie-slim` variant (Debian stable), runs as the `node` user and has a healthcheck. It only contains source code with placeholders; your values are filled in when the container starts.
 - **Limits:** `wrangler dev` is a development server that runs one process on one machine. That is enough for a private image archive but gives neither Cloudflare's scaling nor its CDN. Images are only cached with ordinary `Cache-Control` headers.
 - **Troubleshooting:** `docker compose logs -f`.
 
