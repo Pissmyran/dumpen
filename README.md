@@ -93,6 +93,8 @@ English guidance, references the shared governance documents, and links `jobb`,
 context requires eligible CodeRabbit access; configuration does not grant access or
 control billing.
 
+**Publishing the Docker image:** `.github/workflows/docker.yml` takes the Docker Hub namespace from the repository variable `DOCKERHUB_USERNAME` and the token from the secret `DOCKERHUB_TOKEN` (the token lives in the `release` environment). If the variable is not set, the run stops at once with a clear error, before anything is built or published. The GitHub release already exists by then: set the variable and re-run the workflow, which pushes all tags again.
+
 ## License
 
 MIT, see [LICENSE](LICENSE). The bundled `pako` is MIT licensed, see [PAKO-LICENSE.txt](PAKO-LICENSE.txt).
