@@ -17,6 +17,7 @@ npm test && npm run check
 - **The build:** `src/index.js` is written for Workers Static Assets. What gets deployed is `dist/worker.js`, which `build.mjs` builds with `public/` embedded. Change the source, never `dist/`.
 - **Access:** only `/bilder/*` is public. Everything else requires a Cloudflare Access JWT, or `AUTH_MODE=password` when self-hosting. Never set `AUTH_MODE` or `LOCAL_DEV` in production.
 - **R2 is scanned incrementally:** metadata is saved on write, the edge cache is used, and a range read happens only once per object version. No full rescan per request.
+- **Docker image:** published as `docker.io/pissmyran/dumpen` by `.github/workflows/docker.yml`. `docker-compose.yml` pins it by tag and digest; keep the tag, the digest, `docker/README.md` and `README.md` in sync.
 - **Release:** the version is in `package.json`.
 - **Language:** the app's interface is Swedish; change its language only as its own task. Comments are English.
 - **Documentation:** the app sits behind Access, so the documentation is published only on GitHub.
