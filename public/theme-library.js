@@ -149,8 +149,11 @@ function card(theme, items) {
 
 function render() {
   const byTheme = new Map();
-  for (const image of images)
-    if (image.theme) byTheme.set(image.theme, [...(byTheme.get(image.theme) || []), image]);
+  for (const image of images) {
+    if (!image.theme) continue;
+    if (!byTheme.has(image.theme)) byTheme.set(image.theme, []);
+    byTheme.get(image.theme).push(image);
+  }
   const themes = [...byTheme.keys()].sort((a, b) => a.localeCompare(b, "sv"));
   const grid = $("theme-grid");
   grid.replaceChildren(...themes.map((t) => card(t, byTheme.get(t))));
