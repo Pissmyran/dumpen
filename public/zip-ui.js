@@ -6,6 +6,7 @@ const state = {
   running: false,
   cancel: false,
   controller: null,
+  worker: null,
   requiresFullTheme: false,
 };
 const slug = (value) =>
@@ -41,6 +42,8 @@ function close() {
     $("zip-summary").textContent = "Avbryter efter pågående fil…";
     return;
   }
+  state.worker?.terminate();
+  state.worker = null;
   $("zip-dialog").close();
 }
 function field(labelName, value, placeholder, change, disabled = false) {
@@ -191,8 +194,33 @@ function draw() {
     $("zip-skipped").append(ul);
   }
 }
-async function chooseFile() {
+// Run in a module worker so the bounded but synchronous decoder cannot block the UI.
+async function analyzeZip(file) {
+  await import("./pako.min.js");
+  const decoder = globalThis.pako;
+  const inflater = decoder?.Inflate
+    ? (compressed, expected) => {
+        const unpack = new decoder.Inflate({ raw: true, chunkSize: 65536 });
+        const out = new Uint8Array(expected);
+        let written = 0;
+        unpack.onData = (chunk) => {
+          if (written + chunk.length > expected) throw Error("ZIP-filen expanderar mer än väntat.");
+          out.set(chunk, written);
+          written += chunk.length;
+        };
+        unpack.push(compressed, true);
+        if (unpack.err || written !== expected) throw Error("Felaktig ZIP-komprimering.");
+        return out;
+      }
+    : null;
+  return readImageZip(file, inflater);
+}
+function chooseFile() {
   if (state.running) return;
+  state.worker?.terminate();
+  state.worker = null;
+  state.items = [];
+  state.skipped = [];
   error("");
   $("zip-list").replaceChildren();
   $("zip-results").classList.remove("hidden");
@@ -208,42 +236,43 @@ async function chooseFile() {
     error("Välj en fil som slutar på .zip.");
     return;
   }
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 40)); // Let loading message paint before unzip.
-    // Stream the decompression into a pre-sized output buffer to cap ZIP bombs.
-    const decoder = globalThis.pako;
-    const inflater = decoder?.Inflate
-      ? (compressed, expected) => {
-          const unpack = new decoder.Inflate({ raw: true, chunkSize: 65536 });
-          const out = new Uint8Array(expected);
-          let written = 0;
-          unpack.onData = (chunk) => {
-            if (written + chunk.length > expected)
-              throw Error("ZIP-filen expanderar mer än väntat.");
-            out.set(chunk, written);
-            written += chunk.length;
-          };
-          unpack.push(compressed, true);
-          if (unpack.err || written !== expected) throw Error("Felaktig ZIP-komprimering.");
-          return out;
-        }
-      : null;
-    const result = await readImageZip(file, inflater);
-    state.requiresFullTheme = /mediesviten[-_ ]?14/i.test(file.name);
-    state.items = fillMissingThemes(result.images, file.name).map((i, id) => ({
-      ...i,
-      id,
-      selected: true,
-      status: "ready",
-      message: "",
-    }));
-    state.skipped = result.skipped;
-    draw();
-  } catch (e) {
-    state.items = [];
-    state.skipped = [];
+  const fail = (message) => {
     $("zip-summary").textContent = "Kunde inte importera ZIP-filen";
-    error(e.message || "Ogiltig ZIP-fil.");
+    error(message || "Ogiltig ZIP-fil.");
+  };
+  try {
+    const worker = new Worker(new URL("./zip-ui.js", import.meta.url), { type: "module" });
+    state.worker = worker;
+    worker.onmessage = ({ data }) => {
+      if (state.worker !== worker) return;
+      state.worker = null;
+      worker.terminate();
+      if (data.error) {
+        fail(data.error);
+        return;
+      }
+      state.requiresFullTheme = /mediesviten[-_ ]?14/i.test(file.name);
+      state.items = fillMissingThemes(data.result.images, file.name).map((i, id) => ({
+        ...i,
+        id,
+        selected: true,
+        status: "ready",
+        message: "",
+      }));
+      state.skipped = data.result.skipped;
+      draw();
+    };
+    worker.onerror = () => {
+      if (state.worker !== worker) return;
+      state.worker = null;
+      worker.terminate();
+      fail("ZIP-avkodaren kunde inte starta.");
+    };
+    worker.postMessage(file);
+  } catch (e) {
+    state.worker?.terminate();
+    state.worker = null;
+    fail(e.message);
   }
 }
 async function upload() {
@@ -313,7 +342,7 @@ function init() {
   $("zip-file").addEventListener("change", chooseFile);
   $("zip-upload").addEventListener("click", upload);
   $("zip-dialog").addEventListener("cancel", (e) => {
-    if (state.running) {
+    if (state.running || state.worker) {
       e.preventDefault();
       close();
     }
@@ -322,4 +351,16 @@ function init() {
     if (e.target === $("zip-dialog") && !state.running) close();
   });
 }
-init();
+if (typeof document === "undefined") {
+  globalThis.onmessage = async ({ data, origin }) => {
+    // A dedicated worker only hears its creator, whose messages carry an empty origin.
+    if (origin) return;
+    try {
+      globalThis.postMessage({ result: await analyzeZip(data) });
+    } catch (e) {
+      globalThis.postMessage({ error: e.message || "Ogiltig ZIP-fil." });
+    }
+  };
+} else {
+  init();
+}
