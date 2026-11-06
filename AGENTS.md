@@ -1,23 +1,27 @@
-# AGENTS.md – dumpen
+# AGENTS.md
 
-An image gallery for app icons and themes on Cloudflare R2, plus a Docker image for self-hosting.
+Scope
+- Work only in this repo. Never read, change or open PRs against other repos.
+- Do exactly what is asked. No extra files, lines, steps or config.
+- Repo-specific rules: see REPO.md.
 
-Read the shared rules at the start of every session: [GOVERNANCE.md](https://raw.githubusercontent.com/pissmyran/.github/main/GOVERNANCE.md) and [SERVICES.md](https://raw.githubusercontent.com/pissmyran/.github/main/SERVICES.md). Read `README.md` before larger changes.
+Workflow
+- Never change workflows. Only Renovate and Dependabot may.
+- Never work around rulesets, checks or branch rules.
+- Ask before deviating from a tool's standard setup.
 
-## Commands
+Git and review
+- Squash merge, signed commits, auto-merge on.
+- A review conversation is resolved only after the comment is read in full and the flagged code is analyzed and fixed.
+- Nothing personal in code or docs. Generic placeholders only.
 
-```bash
-npm test && npm run check
-```
+Reporting and context
+- Report only the result, and only when done or blocked. No progress updates, no recaps.
+- Never poll. Never subscribe to PR, CI or repository activity. Never read GitHub notifications.
+- React only to warnings, errors and security alerts. Ignore routine confirmations such as bot comments and merge or subscription notices.
+- Load only the tools, files and history the current task needs.
 
-## Rules
-
-- **Entry:** `src/index.js`, built by `build.mjs`. Bindings: R2, Secrets Store.
-- **The build:** `src/index.js` is written for Workers Static Assets. What gets deployed is `dist/worker.js`, which `build.mjs` builds with `public/` embedded. Change the source, never `dist/`.
-- **Access:** only `/bilder/*` is public. Everything else requires a Cloudflare Access JWT, or `AUTH_MODE=password` when self-hosting. Never set `AUTH_MODE` or `LOCAL_DEV` in production.
-- **R2 is scanned incrementally:** metadata is saved on write, the edge cache is used, and a range read happens only once per object version. No full rescan per request.
-- **Release:** the version is in `package.json`.
-- **Language:** the app's interface is Swedish; change its language only as its own task. Comments are English.
-- **Documentation:** the app sits behind Access, so the documentation is published only on GitHub.
-- **Extra care:** access control, R2 scanning and ZIP import.
-- **Review:** `.coderabbit.yaml` inherits `pissmyran/coderabbit`, adds the Swedish-interface exception, and references shared guidelines and sibling service repositories. Cross-repository context requires eligible CodeRabbit access.
+Language
+- Code, commits, PRs, labels: English.
+- Documentation: English first, Swedish copy in /sv.
+- Talk to the owner in Swedish.
