@@ -1,3 +1,5 @@
+> Guide: [AI- och Copilot-inställningar på GitHub](https://github.com/pissmyran/.github/blob/main/public/ai-och-copilot.md) · [English](https://github.com/pissmyran/.github/blob/main/public/eng/ai-and-copilot.md)
+
 # Dumpen
 
 **Documentation:** [pissmyran.github.io/dumpen](https://pissmyran.github.io/dumpen/) – home, documentation and Docker on one searchable site.
