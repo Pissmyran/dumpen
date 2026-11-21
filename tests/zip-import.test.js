@@ -287,3 +287,101 @@ test("A downloaded theme ZIP imports back into the same theme and apps", async (
   assert.equal(whisparr.variant, "rida");
   assert.equal(whisparr.size, "1254x1254");
 });
+
+// Central directory entries can all refer to the same local data.
+function repeatedDataZip(data, sizes, crc = 0) {
+  const name = new TextEncoder().encode("shared.png");
+  const local = new DataView(new ArrayBuffer(30));
+  local.setUint32(0, 0x04034b50, true);
+  local.setUint16(8, 8, true);
+  local.setUint16(26, name.length, true);
+  const central = sizes
+    .map(({ expanded, compressed = data.length }, i) => {
+      const entryName = new TextEncoder().encode(`image-${i}.png`);
+      const entry = new DataView(new ArrayBuffer(46));
+      entry.setUint32(0, 0x02014b50, true);
+      entry.setUint16(10, 8, true);
+      entry.setUint32(16, crc, true);
+      entry.setUint32(20, compressed, true);
+      entry.setUint32(24, expanded, true);
+      entry.setUint16(28, entryName.length, true);
+      return [entry, entryName];
+    })
+    .flat();
+  const offset = local.byteLength + name.length + data.length;
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, sizes.length, true);
+  end.setUint16(10, sizes.length, true);
+  end.setUint32(
+    12,
+    central.reduce((n, x) => n + x.byteLength, 0),
+    true,
+  );
+  end.setUint32(16, offset, true);
+  return new File([local, name, data, ...central, end], "shared.zip");
+}
+
+test("ZIP expansion budget counts entries that fail decompression or validation", async () => {
+  const size = 10 * 1024 * 1024;
+  const invalidImage = new Uint8Array(size);
+  const data = deflateRawSync(invalidImage);
+  const sizes = [...Array(14).fill({ expanded: size }), { expanded: 33 }];
+  for (const failure of ["inflate", "length", "crc", "dimensions"]) {
+    const archive = repeatedDataZip(
+      data,
+      sizes,
+      failure === "dimensions" ? crc32(invalidImage) : 1,
+    );
+    let calls = 0;
+    await assert.rejects(
+      readImageZip(archive, () => {
+        calls++;
+        if (failure === "inflate") throw new Error("invalid deflate");
+        if (failure === "length") return new Uint8Array(0);
+        return invalidImage;
+      }),
+      /140 MB/,
+      failure,
+    );
+    assert.equal(calls, 14, failure);
+  }
+});
+
+test("ZIP compressed work budget counts repeated failed entries", async () => {
+  const mb = 1024 * 1024;
+  const data = new Uint8Array(12 * mb);
+  const sizes = [
+    ...Array(11).fill({ expanded: 33, compressed: 12 * mb }),
+    { expanded: 33, compressed: 8 * mb },
+    { expanded: 33, compressed: 1 },
+  ];
+  let calls = 0;
+  await assert.rejects(
+    readImageZip(repeatedDataZip(data, sizes), () => {
+      calls++;
+      throw new Error("invalid deflate");
+    }),
+    /140 MB/,
+  );
+  assert.equal(calls, 12);
+});
+
+test("ZIP imports valid images alongside rejected entries within the work budget", async () => {
+  const result = await readImageZip(
+    zip(
+      [
+        { name: "bad-crc.png", data: png() },
+        { name: "bad-size.png", data: png(600, 600) },
+        { name: "plex.png", data: png() },
+      ],
+      true,
+    ),
+    inflate,
+  );
+  assert.deepEqual(
+    result.images.map((image) => image.path),
+    ["plex.png"],
+  );
+  assert.equal(result.skipped.length, 2);
+});
